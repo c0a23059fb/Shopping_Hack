@@ -1,6 +1,31 @@
 # **脆弱性学習サイト「Terminal X」企画書**
 
 **作成日:** 2025 年 7 月 4 日
+**更新日:** 2025 年 7 月 12 日
+
+## **0\. フォルダ構成**
+- .
+  - README.md このドキュメント
+  - .gitignore Git の無視ファイル
+  - documents/
+    - sql.md データベースの仕様書
+  - public/
+    - css/
+    - images/
+    - script/
+    - utility/
+      - database.py データベース操作用スクリプト
+      - requirements.txt 必要なライブラリ一覧
+      - schema.sql データベーススキーマ
+      - testDB.py データベースのテスト用スクリプト
+    - index.cgi トップページ
+    - login.cgi ログインページ
+    - logout.cgi ログアウト処理
+    - cart.cgi カートページ
+    - history.cgi 購入履歴ページ
+    - home.cgi ホームページ
+    - messenger.cgi メッセージ送受信ページ
+    - products.cgi 商品一覧ページ
 
 ## **1\. 企画概要**
 
@@ -34,7 +59,7 @@
 ユーザー情報に基づき、低コストで実現可能な構成を提案する。
 
 - **バックエンド:** Python(cgi)
-- **データベース:** SQLite
+- **データベース:** MySQL
 - **フロントエンド:** HTML, CSS
 - **ホスティング:** ローカル環境
 

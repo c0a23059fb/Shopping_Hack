@@ -3,10 +3,9 @@
 
 import cgi
 import cgitb
-import utility.database as database
 import os
 import http.cookies
-
+from utility.database import verify_session,get_user_by_username, create_message,get_messages_for_user
 cgitb.enable()
 
 form = cgi.FieldStorage()
@@ -19,8 +18,9 @@ cookie_string = os.environ.get('HTTP_COOKIE', '')
 cookies = http.cookies.SimpleCookie()
 if cookie_string:
     cookies.load(cookie_string)
+# 認証チェック
+is_authenticated, current_user = verify_session(cookies)
 
-is_authenticated, current_user = database.check_authentication(cookies)
 
 if not is_authenticated:
     # 認証されていない場合、ログインページにリダイレクト
@@ -28,12 +28,13 @@ if not is_authenticated:
     print()
     exit()
 
+
 # メッセージ送信処理
 if action == 'transmit':
     if recipient and message_content:
-        recipient_user = database.get_user_by_username(recipient)
+        recipient_user = get_user_by_username(recipient)
         if recipient_user:
-            database.create_message(current_user['id'], recipient_user['id'], message_content)
+            create_message(current_user, recipient_user['id'], message_content)
         else:
             print("Content-Type: text/html; charset=utf-8")
             print()  # ヘッダーと本文の間に空行を追加
@@ -66,7 +67,7 @@ if action == 'transmit':
         exit()
 
 # メッセージ表示
-messages_data = database.get_messages_for_user(current_user['id'])
+messages_data = get_messages_for_user(current_user)
 
 print("Content-Type: text/html; charset=utf-8")
 print()  # ヘッダーと本文の間に空行を追加
@@ -202,7 +203,7 @@ print("""<!DOCTYPE html>
 
 # メッセージ表示ロジック
 for msg in messages_data:
-    is_sent = msg['sender_id'] == current_user['id']
+    is_sent = msg['sender_id'] == current_user
     sender_label = "To" if is_sent else "From"
     sender_name = msg['recipient_name'] if is_sent else msg['sender_name']
     sender_class = "sent" if is_sent else "received"

@@ -7,26 +7,23 @@ import os
 import sys
 import http.cookies
 
-# utilityディレクトリをパスに追加
-sys.path.append(os.path.join(os.path.dirname(__file__), 'utility'))
-from database import check_authentication
-
+from utility.database import verify_session
 cgitb.enable()
 
-# セッションチェック
 cookie_string = os.environ.get('HTTP_COOKIE', '')
 cookies = http.cookies.SimpleCookie()
 if cookie_string:
     cookies.load(cookie_string)
-
 # 認証チェック
-is_authenticated, current_user = check_authentication(cookies)
+is_authenticated, current_user = verify_session(cookies)
+
 
 if not is_authenticated:
     # 認証されていない場合、ログインページにリダイレクト
     print("Location: index.cgi")
     print()
     exit()
+
 
 print("Content-Type: text/html; charset=utf-8")
 print()

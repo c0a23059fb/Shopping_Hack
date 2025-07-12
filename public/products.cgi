@@ -5,7 +5,7 @@ import cgi
 import cgitb
 import os
 import http.cookies
-from utility.database import get_all_products,check_authentication
+from utility.database import get_all_products,verify_session
 
 cgitb.enable()
 
@@ -18,8 +18,9 @@ cookie_string = os.environ.get('HTTP_COOKIE', '')
 cookies = http.cookies.SimpleCookie()
 if cookie_string:
     cookies.load(cookie_string)
+# 認証チェック
+is_authenticated, current_user = verify_session(cookies)
 
-is_authenticated, current_user = check_authentication(cookies)
 
 if not is_authenticated:
     # 認証されていない場合、ログインページにリダイレクト

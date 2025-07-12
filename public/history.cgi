@@ -5,7 +5,7 @@ import os
 import http.cookies
 import cgitb
 from datetime import datetime
-from utility.database import check_authentication, get_purchase_history, create_transaction
+from utility.database import verify_session, get_purchase_history
 
 cgitb.enable()
 
@@ -14,9 +14,9 @@ cookie_string = os.environ.get('HTTP_COOKIE', '')
 cookies = http.cookies.SimpleCookie()
 if cookie_string:
     cookies.load(cookie_string)
-
 # 認証チェック
-is_authenticated, current_user = check_authentication(cookies)
+is_authenticated, user_id = verify_session(cookies)
+
 
 if not is_authenticated:
     # 認証されていない場合、ログインページにリダイレクト
@@ -24,8 +24,8 @@ if not is_authenticated:
     print()
     exit()
 
+
 # ログインしているユーザーの購入履歴を取得
-user_id = current_user['id']
 purchase_history = get_purchase_history(user_id)
 
 print("Content-Type: text/html; charset=utf-8")

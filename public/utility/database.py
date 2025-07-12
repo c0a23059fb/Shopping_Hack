@@ -112,21 +112,35 @@ def get_session(session_id):
     conn.close()
     return session
 
-def verify_session(user_id, session_id):
+def verify_session(cookies):
     """
-    user_idとsession_idの組み合わせでセッションを検証する。
+    Cookieからuser_idとsession_idを取得し、セッションの有効性を検証する。
     DBに保存されているセッション情報と一致し、有効期限内の場合のみTrueを返す。
+    成功している場合はuser_idも含めて返す。
     """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(
-        "SELECT * FROM sessions WHERE user_id = %s AND session_id = %s AND expires_at > %s",
-        (user_id, session_id, datetime.now())
-    )
-    session = cursor.fetchone()
-    conn.close()
-    return session is not None
-
+    try:
+        if 'user_id' not in cookies or 'session_id' not in cookies:
+            return False, None
+        
+        user_id = cookies['user_id'].value
+        session_id = cookies['session_id'].value
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT * FROM sessions WHERE user_id = %s AND session_id = %s AND expires_at > %s",
+            (user_id, session_id, datetime.now())
+        )
+        session = cursor.fetchone()
+        conn.close()
+        
+        if session:
+            return True, user_id
+        else:
+            return False, None
+    except Exception as e:
+        print(f"Error verifying session: {e}")
+        return False, None
 def delete_session(session_id):
     """
     セッションIDでセッションを削除する（ログアウト処理）。
@@ -272,24 +286,3 @@ def get_purchase_history(user_id):
     history = cursor.fetchall()
     conn.close()
     return history
-
-def check_authentication(request_cookies):
-    """
-    Cookieから認証情報を取得し、セッションの有効性を検証する。
-    戻り値: (is_authenticated: bool, user_info: dict or None)
-    """
-    try:
-        if 'user_id' not in request_cookies or 'session_id' not in request_cookies:
-            return False, None
-        
-        user_id = request_cookies['user_id'].value
-        session_id = request_cookies['session_id'].value
-        
-        # セッションの検証
-        if verify_session(user_id, session_id):
-            user_info = get_user_by_id(user_id)
-            return True, user_info
-        else:
-            return False, None
-    except Exception:
-        return False, None

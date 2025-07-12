@@ -4,8 +4,8 @@
 import cgi
 import cgitb
 import os
-from http.cookies import SimpleCookie
-from utility.database import create_transaction, check_authentication
+import http.cookies
+from utility.database import create_transaction, verify_session
 import html  # HTMLエスケープ用ライブラリを追加
 
 cgitb.enable()
@@ -18,17 +18,19 @@ form = cgi.FieldStorage()
 action = form.getvalue('action')
 
 # Cookieからセッション情報を取得
-cookie = SimpleCookie(os.environ.get('HTTP_COOKIE'))
-is_authenticated, user_info = check_authentication(cookie)
+cookie_string = os.environ.get('HTTP_COOKIE', '')
+cookies = http.cookies.SimpleCookie()
+if cookie_string:
+    cookies.load(cookie_string)
+# 認証チェック
+is_authenticated, user_id = verify_session(cookies)
+
 
 if not is_authenticated:
-    print("Content-Type: text/html; charset=utf-8")
-    print("Status: 302 Found")
+    # 認証されていない場合、ログインページにリダイレクト
     print("Location: index.cgi")
     print()
     exit()
-
-user_id = user_info['id']  # セッションから取得したユーザーID
 
 if action == 'confirm_purchase':
     try:
