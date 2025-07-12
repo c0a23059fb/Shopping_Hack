@@ -9,7 +9,7 @@ import http.cookies
 
 # utilityディレクトリをパスに追加
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utility'))
-from database import get_session, get_user_by_id
+from database import check_authentication
 
 cgitb.enable()
 
@@ -19,37 +19,12 @@ cookies = http.cookies.SimpleCookie()
 if cookie_string:
     cookies.load(cookie_string)
 
-session_id = cookies.get('session_id')
-current_user = None
+# 認証チェック
+is_authenticated, current_user = check_authentication(cookies)
 
-if session_id:
-    session_id = session_id.value
-    # データベースでセッションを確認
-    try:
-        session = get_session(session_id)
-        if session:
-            # セッションが有効な場合、ユーザー情報を取得
-            user_data = get_user_by_id(session['user_id'])
-            if user_data:
-                current_user = user_data
-            else:
-                # ユーザーデータが見つからない場合、ログインページにリダイレクト
-                print("Location: index.html")
-                print()
-                exit()
-        else:
-            # セッションが無効な場合、ログインページにリダイレクト
-            print("Location: index.html")
-            print()
-            exit()
-    except Exception as e:
-        # データベースエラーの場合もログインページにリダイレクト
-        print("Location: index.html")
-        print()
-        exit()
-else:
-    # セッションIDがない場合、ログインページにリダイレクト
-    print("Location: index.html")
+if not is_authenticated:
+    # 認証されていない場合、ログインページにリダイレクト
+    print("Location: index.cgi")
     print()
     exit()
 

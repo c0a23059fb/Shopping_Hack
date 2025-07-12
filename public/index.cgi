@@ -1,4 +1,13 @@
-<!DOCTYPE html>
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import http.cookies
+from utility.database import get_user_by_id, verify_session
+
+def print_login_page():
+    """ログインページのHTMLを出力する関数"""
+    print("""<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -116,9 +125,6 @@
                 <button type="submit" name="action" value="login" class="btn">[login.sh]</button>
                 <button type="submit" name="action" value="create_user" class="btn">[create_user.sh]</button>
             </form>
-            <form id="logoutForm" method="POST" action="logout.cgi" style="display: none;">
-                <button type="submit" class="btn">[logout.sh]</button>
-            </form>
         </div>
     </div>
 
@@ -129,18 +135,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // CGI経由で状態が管理されるため、クライアントサイドのデータは削除
-            // let users = sessionStorage.getItem('users') ? JSON.parse(sessionStorage.getItem('users')) : [ { username: 'user1', password: 'password' }, { username: 'admin', password: 'admin_password' } ];
-            // let currentUser = sessionStorage.getItem('currentUser') ? JSON.parse(sessionStorage.getItem('currentUser')) : null;
-
             const usernameInput = document.getElementById('username');
             const passwordInput = document.getElementById('password');
             const loginForm = document.getElementById('loginForm');
-            const logoutForm = document.getElementById('logoutForm');
-            const loginBtn = loginForm.querySelector('button[value="login"]');
-            const createUserBtn = loginForm.querySelector('button[value="create_user"]');
-            const logoutBtn = logoutForm.querySelector('button');
-
             const messageWindow = document.getElementById('messageWindow');
             const messageTitleSpan = messageWindow.querySelector('.title-bar span');
             const messageText = document.getElementById('messageText');
@@ -159,31 +156,52 @@
                 });
             }
 
-            // このページにアクセスした時点でCGI側でログイン状態をチェックし、
-            // ログイン済みであればhome.cgiへリダイレクトされる想定
-            // そのため、クライアントサイドでのログイン状態の表示切り替えは限定的
-            // 初期状態ではログインフォームを表示し、ログアウトフォームは非表示
-
-            // ここでは純粋にフォームの切り替えのみを行う
-            // 実際のログイン状態はCGIがCookieやセッションで管理し、リダイレクトする
-            // したがって、このJSは単にUIの初期状態を設定するだけ
+            // ログインフォームの初期化
             loginForm.style.display = 'block';
-            logoutForm.style.display = 'none';
-            usernameInput.readOnly = false;
-            passwordInput.readOnly = false;
             usernameInput.value = '';
             passwordInput.value = '';
-
-            // フォーム送信はCGIに任せるため、JSでのログイン/作成ロジックは削除
-            // 各ボタンは `type="submit"` と `name="action"` を持つため、
-            // クリックされると対応する action の値が CGI に送信される
-
-            // ログアウトボタンクリック時の処理 (CGIへ送信)
-            // これは home.html から遷移してきた際のログアウト処理を想定
-            // home.html からの遷移時に、CGIがログイン済みと判断した場合、
-            // `index.cgi` がログアウトフォームを表示するように制御する
-            // （ここではそのロジックは書かれていないが、バックエンド担当者向けの情報として記載）
         });
     </script>
 </body>
 </html>
+""")
+
+try:
+    # Cookieを取得
+    cookie_string = os.environ.get('HTTP_COOKIE', '')
+    cookies = http.cookies.SimpleCookie()
+    cookies.load(cookie_string)
+    
+    user_id = None
+    session_id = None
+    
+    # Cookieからuser_idとsession_idを取得
+    if 'user_id' in cookies:
+        user_id = cookies['user_id'].value
+    if 'session_id' in cookies:
+        session_id = cookies['session_id'].value
+    
+    # ログイン状態をチェック
+    if user_id and session_id:
+        try:
+            # セッションが有効かチェック
+            if verify_session(user_id, session_id):
+                # ログイン済みの場合、home.cgiにリダイレクト
+                print("Content-Type: text/html; charset=utf-8")
+                print("Location: home.cgi")
+                print() # ヘッダーと本文の間の空行
+                exit()
+        except Exception as e:
+            # セッションチェックでエラーが発生した場合はログインページを表示
+            pass
+    
+    # 未ログインの場合、ログインページを表示
+    print("Content-Type: text/html; charset=utf-8")
+    print() # ヘッダーと本文の間の空行
+    print_login_page()
+
+except Exception as e:
+    # エラーが発生した場合もログインページを表示
+    print("Content-Type: text/html; charset=utf-8")
+    print() # ヘッダーと本文の間の空行
+    print_login_page()

@@ -112,6 +112,21 @@ def get_session(session_id):
     conn.close()
     return session
 
+def verify_session(user_id, session_id):
+    """
+    user_idとsession_idの組み合わせでセッションを検証する。
+    DBに保存されているセッション情報と一致し、有効期限内の場合のみTrueを返す。
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT * FROM sessions WHERE user_id = %s AND session_id = %s AND expires_at > %s",
+        (user_id, session_id, datetime.now())
+    )
+    session = cursor.fetchone()
+    conn.close()
+    return session is not None
+
 def delete_session(session_id):
     """
     セッションIDでセッションを削除する（ログアウト処理）。
@@ -153,6 +168,30 @@ def get_product_by_id(product_id):
     conn.close()
     return product
 
+def search_products(query):
+    """
+    検索クエリを使用して商品を取得する。
+    SQLインジェクションが可能な形で実装。
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(f"SELECT * FROM products WHERE name LIKE '%{query}%' OR description LIKE '%{query}%'")
+    products = cursor.fetchall()
+    conn.close()
+    return products
+
+def get_products_by_ids(product_ids):
+    """
+    複数の商品IDに基づいて商品情報を取得する。
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    format_strings = ','.join(['%s'] * len(product_ids))
+    cursor.execute(f"SELECT * FROM products WHERE id IN ({format_strings})", tuple(product_ids))
+    products = cursor.fetchall()
+    conn.close()
+    return products
+
 # --- Message CRUD (変更なし) ---
 
 def create_message(sender_id, recipient_id, content):
@@ -187,6 +226,7 @@ def create_transaction(user_id, cart_items):
     """
     決済処理を行い、トランザクションと詳細レコードを作成する。
     """
+    print(f"DEBUG: user_id={user_id}, cart_items={cart_items}")  # デバッグ出力
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -196,7 +236,13 @@ def create_transaction(user_id, cart_items):
             (user_id, total_amount)
         )
         transaction_id = cursor.lastrowid
+        
         for item in cart_items:
+            # 商品が存在するか確認
+            cursor.execute("SELECT COUNT(*) FROM products WHERE id = %s", (item['product_id'],))
+            if cursor.fetchone()[0] == 0:
+                raise ValueError(f"Product ID {item['product_id']} does not exist.")
+            
             cursor.execute(
                 "INSERT INTO transaction_items (transaction_id, product_id, purchase_price) VALUES (%s, %s, %s)",
                 (transaction_id, item['product_id'], item['purchase_price'])
@@ -204,8 +250,8 @@ def create_transaction(user_id, cart_items):
         conn.commit()
     except Exception as e:
         conn.rollback()
-        print(f"An error occurred: {e}")
-        return None
+        print(f"DEBUG: An error occurred in create_transaction: {e}")  # デバッグ出力
+        raise  # 例外を再スローして上位で処理
     finally:
         conn.close()
     
@@ -226,3 +272,24 @@ def get_purchase_history(user_id):
     history = cursor.fetchall()
     conn.close()
     return history
+
+def check_authentication(request_cookies):
+    """
+    Cookieから認証情報を取得し、セッションの有効性を検証する。
+    戻り値: (is_authenticated: bool, user_info: dict or None)
+    """
+    try:
+        if 'user_id' not in request_cookies or 'session_id' not in request_cookies:
+            return False, None
+        
+        user_id = request_cookies['user_id'].value
+        session_id = request_cookies['session_id'].value
+        
+        # セッションの検証
+        if verify_session(user_id, session_id):
+            user_info = get_user_by_id(user_id)
+            return True, user_info
+        else:
+            return False, None
+    except Exception:
+        return False, None

@@ -7,9 +7,7 @@ import os
 import sys
 import http.cookies
 
-# utilityディレクトリをパスに追加
-sys.path.append(os.path.join(os.path.dirname(__file__), 'utility'))
-from database import delete_session
+from utility.database import delete_session
 
 # エラー発生時に詳細なトレースバックを表示（開発用）
 cgitb.enable()
@@ -21,6 +19,7 @@ if cookie_string:
     cookies.load(cookie_string)
 
 session_id = cookies.get('session_id')
+user_id = cookies.get('user_id')
 if session_id:
     session_id = session_id.value
 
@@ -35,6 +34,7 @@ if session_id:
     
     # Cookieを削除
     print("Set-Cookie: session_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/")
+    print("Set-Cookie: user_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/")
 
 print() # ヘッダーと本文の間の空行
 
@@ -121,7 +121,7 @@ print("""<!DOCTYPE html>
         <div class="window-content">
             <p>Logout successful. Session has been terminated.</p>
             <p>Redirecting to login page...</p>
-            <meta http-equiv="refresh" content="2;url=index.html">
+            <meta http-equiv="refresh" content="2;url=index.cgi">
         </div>
     </div>
 </body>

@@ -8,9 +8,7 @@ import sys
 import http.cookies
 from datetime import datetime, timedelta
 
-# utilityディレクトリをパスに追加
-sys.path.append(os.path.join(os.path.dirname(__file__), 'utility'))
-from database import create_user, verify_password, get_user_by_username, create_session, delete_user_sessions
+from utility.database import create_user, verify_password, get_user_by_username, create_session, delete_user_sessions
 
 # エラー発生時に詳細なトレースバックを表示（開発用）
 cgitb.enable()
@@ -133,6 +131,7 @@ try:
                 
                 # HTTPヘッダーを出力（Cookieを含む）
                 print("Content-Type: text/html; charset=utf-8")
+                print(f"Set-Cookie: user_id={user['id']}; HttpOnly; Path=/")
                 print(f"Set-Cookie: session_id={session_id}; HttpOnly; Path=/")
                 print() # ヘッダーと本文の間の空行
                 
@@ -150,7 +149,7 @@ try:
                 print_html_header()
                 print("<p>Login failed: Invalid username or password.</p>")
                 print('<p>Redirecting back to login...</p>')
-                print('<meta http-equiv="refresh" content="2;url=index.html">')
+                print('<meta http-equiv="refresh" content="2;url=index.cgi">')
                 print_html_footer()
         else:
             # HTTPヘッダーを出力
@@ -160,7 +159,7 @@ try:
             print_html_header()
             print("<p>Error: Username and password are required.</p>")
             print('<p>Redirecting back to login...</p>')
-            print('<meta http-equiv="refresh" content="2;url=index.html">')
+            print('<meta http-equiv="refresh" content="2;url=index.cgi">')
             print_html_footer()
             
     elif action == 'create_user':
@@ -177,20 +176,20 @@ try:
                     print(f"<p>User '{username}' created successfully!</p>")
                     print('<p>You can now log in with your credentials.</p>')
                     print('<p>Redirecting back to login...</p>')
-                    print('<meta http-equiv="refresh" content="3;url=index.html">')
+                    print('<meta http-equiv="refresh" content="3;url=index.cgi">')
                 else:
                     print(f"<p>Error: Username '{username}' already exists.</p>")
                     print('<p>Please choose a different username.</p>')
                     print('<p>Redirecting back to login...</p>')
-                    print('<meta http-equiv="refresh" content="3;url=index.html">')
+                    print('<meta http-equiv="refresh" content="3;url=index.cgi">')
             except Exception as e:
                 print(f"<p>Error creating user: {str(e)}</p>")
                 print('<p>Redirecting back to login...</p>')
-                print('<meta http-equiv="refresh" content="3;url=index.html">')
+                print('<meta http-equiv="refresh" content="3;url=index.cgi">')
         else:
             print("<p>Error: Username and password cannot be empty for user creation.</p>")
             print('<p>Redirecting back to login...</p>')
-            print('<meta http-equiv="refresh" content="2;url=index.html">')
+            print('<meta http-equiv="refresh" content="2;url=index.cgi">')
         print_html_footer()
     else:
         # HTTPヘッダーを出力
@@ -200,7 +199,7 @@ try:
         print_html_header()
         print("<p>Invalid action requested.</p>")
         print('<p>Redirecting back to login...</p>')
-        print('<meta http-equiv="refresh" content="2;url=index.html">')
+        print('<meta http-equiv="refresh" content="2;url=index.cgi">')
         print_html_footer()
 
 except Exception as e:
@@ -211,5 +210,5 @@ except Exception as e:
     print_html_header()
     print(f"<p>Database error: {str(e)}</p>")
     print('<p>Redirecting back to login...</p>')
-    print('<meta http-equiv="refresh" content="3;url=index.html">')
+    print('<meta http-equiv="refresh" content="3;url=index.cgi">')
     print_html_footer()
