@@ -34,7 +34,7 @@ if action == 'transmit':
     if recipient and message_content:
         recipient_user = get_user_by_username(recipient)
         if recipient_user:
-            create_message(current_user, recipient_user['id'], message_content)
+            create_message(current_user, recipient, message_content)
         else:
             print("Content-Type: text/html; charset=utf-8")
             print()  # ヘッダーと本文の間に空行を追加
@@ -203,7 +203,7 @@ print("""<!DOCTYPE html>
 
 # メッセージ表示ロジック
 for msg in messages_data:
-    is_sent = msg['sender_id'] == current_user
+    is_sent = msg['sender_name'] == current_user
     sender_label = "To" if is_sent else "From"
     sender_name = msg['recipient_name'] if is_sent else msg['sender_name']
     sender_class = "sent" if is_sent else "received"

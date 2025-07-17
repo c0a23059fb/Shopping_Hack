@@ -1,5 +1,9 @@
 -- データベースの初期化とテーブル作成用SQL (MySQL用)
 
+-- データベースの作成と使用
+CREATE DATABASE IF NOT EXISTS terminal_x;
+USE terminal_x;
+
 -- 古いテーブルが存在すれば削除 (依存関係の逆順で削除)
 DROP TABLE IF EXISTS transaction_items;
 DROP TABLE IF EXISTS transactions;
@@ -29,10 +33,10 @@ CREATE TABLE products (
 -- セッション管理テーブル
 CREATE TABLE sessions (
     session_id VARCHAR(64) PRIMARY KEY NOT NULL,
-    user_id INT NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users (username) ON DELETE CASCADE
 );
 
 -- メッセージテーブル
@@ -68,11 +72,11 @@ CREATE TABLE transaction_items (
 
 -- 初期データの投入
 INSERT INTO users (username, password_hash) VALUES
-('admin','$6$8a5cb7be35313ee1$0swEW0uf6Y8OTjTN7cHaWA2MpHmuF5YeFtNz32AxEXqLi9CNObYESfla9xnhULKhdLfK1pwCKQmeGL2hLfPjx'),
+('admin','$6$5c814a18248db4bf$tZDj62FpcX1ih2zQY4wvZvSrs0DlW8AU1AE9rQghdxAcspsTNDTCHF8h6FeI/LPNF5Cc1xkJfCi.fi6eJfiA7/'),
 ('user1','$6$dd537d8a48d14e5a$NyGpe5348Msu4QJ9oIdI2DwrVmyVKhQt3nE0lsBlYF9/Hgu1MrGFuq/bQX97rr1UL0DD9zApwI.Ffa7XLgqke0');
 
 INSERT INTO products (name, seller, price, image_url, description) VALUES
-('Item_X123', 'Vendor_A5', 0.05, 'https://placehold.co/64x64/000000/00ff41?text=X123', 'A versatile toolkit for network reconnaissance.'),
-('Cipher_003', 'CipherMaster', 5.00, 'https://placehold.co/64x64/000000/00ff41?text=C003', 'Military-grade encryption/decryption suite.'),
-('Enigma_Pack', 'ShadowCorp', 3.50, 'https://placehold.co/64x64/000000/00ff41?text=ENIG', 'A pack of social engineering templates.'),
-('ZeroDay_Exploit', 'GhostSec', 50.00, 'https://placehold.co/64x64/000000/00ff41?text=0DAY', 'Undisclosed exploit for a popular OS.')
+('USB', 'Vendor_A5', 0.05, 'images/products/USBmemory.png', 'hacking用usbメモリ'),
+('スマホ', 'CipherMaster', 5.00, 'images/products/smartphone.png', '飛ばし用スマホ'),
+('薬', 'ShadowCorp', 3.50, 'images/products/drugtwo.png', '見てわかる'),
+('葉っぱ', 'GhostSec', 50.00, 'images/products/malifana.png', '吸うのにいい。');

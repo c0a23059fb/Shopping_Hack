@@ -34,7 +34,7 @@ product_id = form.getvalue('product_id')  # 商品詳細表示のためのID
 search_query = form.getvalue('search_query')  # 検索キーワード
 
 # 商品データをデータベースから取得
-products_data = get_all_products()
+products_data = get_all_products(search_query)
 
 print("Content-Type: text/html; charset=utf-8")
 print()
@@ -185,32 +185,31 @@ print(f'            <a href="home.cgi" class="btn">[HOME]</a>')
 print(f"""        </div>
         <div class="window-content">
             <form method="GET" action="products.cgi" style="margin-bottom: 20px;">
-                <input type="text" name="search_query" placeholder="Search products..." value="" style="width: calc(100% - 20px); padding: 8px; border: 1px solid var(--border-color); background-color: #222; color: var(--text-color);">
+                <input type="text" name="search_query" placeholder="Search products..." value="{search_query or ''}" style="width: calc(100% - 20px); padding: 8px; border: 1px solid var(--border-color); background-color: #222; color: var(--text-color);">
                 <button type="submit" class="btn">[SEARCH]</button>
             </form>
 """)
 
 if search_query:
-    # 検索結果表示
+    # 検索結果表示（データベースで検索済み）
     print("""            <table class="styled-table">
                 <thead> <tr> <th>Select</th> <th>IMG</th> <th>ID</th> <th>ITEM_NAME</th> <th>SELLER</th> <th>PRICE (BTC)</th> </tr> </thead>
                 <tbody>""")
     for p in products_data:
-        if search_query.lower() in p['name'].lower() or search_query.lower() in p['description'].lower():
-            print(f'                    <tr data-id="{p["id"]}" data-name="{p["name"]}" data-price="{p["price"]}">')
-            print(f'                        <td><input type="checkbox" class="product-checkbox"></td>')
-            print(f'                        <td><img src="{p["image_url"]}" alt="{p["name"]}" class="product-thumbnail" onerror="this.onerror=null; this.src=\'https://placehold.co/64x64/000000/00ff41?text=ERR\';"></td>')
-            print(f'                        <td>{p["id"]}</td>')
-            print(f'                        <td><a href="products.cgi?product_id={p["id"]}" style="color:var(--text-color); text-decoration:none;">{p["name"]}</a></td>')
-            print(f'                        <td>{p["seller"]}</td>')
-            print(f'                        <td>{p["price"]:.2f}</td>')
-            print(f'                    </tr>')
+        print(f'                    <tr data-id="{p["id"]}" data-name="{p["name"]}" data-price="{p["price"]}">')
+        print(f'                        <td><input type="checkbox" class="product-checkbox"></td>')
+        print(f'                        <td><img src="{p["image_url"]}" alt="{p["name"]}" class="product-thumbnail" onerror="this.onerror=null; this.src=\'https://placehold.co/64x64/000000/00ff41?text=ERR\';"></td>')
+        print(f'                        <td>{p["id"]}</td>')
+        print(f'                        <td><a href="products.cgi?product_id={p["id"]}" style="color:var(--text-color); text-decoration:none;">{p["name"]}</a></td>')
+        print(f'                        <td>{p["seller"]}</td>')
+        print(f'                        <td>{p["price"]:.2f}</td>')
+        print(f'                    </tr>')
     print("""                </tbody>
             </table>
 """)
 elif product_id and product:
     print(f"""            <div class="detail-layout">
-                <div class="detail-image-container"> <img id="detail-img" src="{product['image'].replace('64x64', '150x150')}" alt="Product Image" class="detail-image" onerror="this.onerror=null; this.src='https://placehold.co/150x150/000000/00ff41?text=NO_IMG';"> </div>
+                <div class="detail-image-container"> <img id="detail-img" src="{product['image_url'].replace('64x64', '150x150')}" alt="Product Image" class="detail-image" onerror="this.onerror=null; this.src='https://placehold.co/150x150/000000/00ff41?text=NO_IMG';"> </div>
                 <div class="detail-info">
                     <div class="form-group"> <label>Item Name</label> <input type="text" id="detail-name" value="{product['name']}" readonly> </div>
                     <div class="form-group"> <label>Price (BTC)</label> <input type="text" id="detail-price" value="{product['price']:.2f}" readonly> </div>

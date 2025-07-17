@@ -164,11 +164,17 @@ def delete_user_sessions(user_id):
 
 # --- Product CRUD (変更なし) ---
 
-def get_all_products():
-    """すべての商品情報を取得する。"""
+def get_all_products(search_query=None):
+    """すべての商品情報を取得する。検索クエリが指定された場合は検索結果を返す。"""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM products ORDER BY id")
+    
+    if search_query:
+        # SQLインジェクションが可能な脆弱な実装
+        cursor.execute(f"SELECT * FROM products WHERE name LIKE '%{search_query}%' OR description LIKE '%{search_query}%' ORDER BY id")
+    else:
+        cursor.execute("SELECT * FROM products ORDER BY id")
+    
     products = cursor.fetchall()
     conn.close()
     return products
@@ -208,8 +214,20 @@ def get_products_by_ids(product_ids):
 
 # --- Message CRUD (変更なし) ---
 
-def create_message(sender_id, recipient_id, content):
+def create_message(sender_username, recipient_username, content):
     """新規メッセージを作成する。"""
+    # 送信者と受信者のユーザー名からユーザーIDを取得
+    sender = get_user_by_username(sender_username)
+    recipient = get_user_by_username(recipient_username)
+    
+    if not sender:
+        raise ValueError(f"Sender '{sender_username}' not found")
+    if not recipient:
+        raise ValueError(f"Recipient '{recipient_username}' not found")
+    
+    sender_id = sender['id']
+    recipient_id = recipient['id']
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -219,8 +237,15 @@ def create_message(sender_id, recipient_id, content):
     conn.commit()
     conn.close()
 
-def get_messages_for_user(user_id):
+def get_messages_for_user(username):
     """特定のユーザーが送受信した全メッセージを取得する。"""
+    # まずユーザー名からユーザーIDを取得
+    user = get_user_by_username(username)
+    if not user:
+        return []
+    
+    user_id = user['id']
+    
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
@@ -236,11 +261,19 @@ def get_messages_for_user(user_id):
     
 # --- Transaction CRUD (変更なし) ---
 
-def create_transaction(user_id, cart_items):
+def create_transaction(username, cart_items):
     """
     決済処理を行い、トランザクションと詳細レコードを作成する。
     """
-    print(f"DEBUG: user_id={user_id}, cart_items={cart_items}")  # デバッグ出力
+    print(f"DEBUG: username={username}, cart_items={cart_items}")  # デバッグ出力
+    
+    # まずユーザー名からユーザーIDを取得
+    user = get_user_by_username(username)
+    if not user:
+        raise ValueError(f"User '{username}' not found")
+    
+    user_id = user['id']
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -271,8 +304,15 @@ def create_transaction(user_id, cart_items):
     
     return transaction_id
 
-def get_purchase_history(user_id):
+def get_purchase_history(username):
     """特定のユーザーの全購入履歴を取得する。"""
+    # まずユーザー名からユーザーIDを取得
+    user = get_user_by_username(username)
+    if not user:
+        return []
+    
+    user_id = user['id']
+    
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(

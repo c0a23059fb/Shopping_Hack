@@ -126,12 +126,12 @@ try:
             if verify_password(username, password):
                 user = get_user_by_username(username)
                 # 既存のセッションを削除してから新しいセッションを作成
-                delete_user_sessions(user['id'])
-                session_id = create_session(user['id'])
+                delete_user_sessions(user['username'])
+                session_id = create_session(user['username'])
                 
                 # HTTPヘッダーを出力（Cookieを含む）
                 print("Content-Type: text/html; charset=utf-8")
-                print(f"Set-Cookie: user_id={user['id']}; HttpOnly; Path=/")
+                print(f"Set-Cookie: user_id={user['username']}; HttpOnly; Path=/")
                 print(f"Set-Cookie: session_id={session_id}; HttpOnly; Path=/")
                 print() # ヘッダーと本文の間の空行
                 

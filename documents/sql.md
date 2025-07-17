@@ -33,12 +33,12 @@
 
 ### **3\. セッションテーブル (sessions)**
 
-| カラム名（論理名） | カラム名（物理名） | データ型       | 制約                            | 説明                         |
-| :----------------- | :----------------- | :------------- | :------------------------------ | :--------------------------- |
-| セッション ID      | session_id         | VARCHAR(64)    | PRIMARY KEY NOT NULL            | 一意のセッション識別子       |
-| ユーザー ID        | user_id            | INT            | NOT NULL, FOREIGN KEY(users.id) | セッションの所有者のユーザーID |
-| 作成日時           | created_at         | TIMESTAMP      | DEFAULT CURRENT_TIMESTAMP       | セッション作成日時           |
-| 有効期限           | expires_at         | TIMESTAMP      | NOT NULL                        | セッションの有効期限         |
+| カラム名（論理名） | カラム名（物理名） | データ型       | 制約                                 | 説明                         |
+| :----------------- | :----------------- | :------------- | :----------------------------------- | :--------------------------- |
+| セッション ID      | session_id         | VARCHAR(64)    | PRIMARY KEY NOT NULL                 | 一意のセッション識別子       |
+| ユーザー ID        | user_id            | VARCHAR(255)   | NOT NULL, FOREIGN KEY(users.username) | セッションの所有者のユーザー名 |
+| 作成日時           | created_at         | TIMESTAMP      | DEFAULT CURRENT_TIMESTAMP            | セッション作成日時           |
+| 有効期限           | expires_at         | TIMESTAMP      | NOT NULL                             | セッションの有効期限         |
 
 ### **4\. トランザクションテーブル (transactions)**
 
@@ -67,4 +67,4 @@
 | 送信者 ID          | sender_id          | INT            | NOT NULL, FOREIGN KEY(users.id) | メッセージを送信したユーザーの ID |
 | 受信者 ID          | recipient_id       | INT            | NOT NULL, FOREIGN KEY(users.id) | メッセージを受信したユーザーの ID |
 | 本文               | content            | TEXT           | NOT NULL                        | メッセージの内容                  |
-| 送信日時           | sent_at            | TIMESTAMP      | DEFAULT CURRENT_TIMESTAMP       | メッセージの送
+| 送信日時           | sent_at            | TIMESTAMP      | DEFAULT CURRENT_TIMESTAMP       | メッセージの送信日時          |
