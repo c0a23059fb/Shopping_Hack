@@ -73,10 +73,23 @@ CREATE TABLE transaction_items (
 -- 初期データの投入
 INSERT INTO users (username, password_hash) VALUES
 ('admin','$6$5c814a18248db4bf$tZDj62FpcX1ih2zQY4wvZvSrs0DlW8AU1AE9rQghdxAcspsTNDTCHF8h6FeI/LPNF5Cc1xkJfCi.fi6eJfiA7/'),
-('user1','$6$dd537d8a48d14e5a$NyGpe5348Msu4QJ9oIdI2DwrVmyVKhQt3nE0lsBlYF9/Hgu1MrGFuq/bQX97rr1UL0DD9zApwI.Ffa7XLgqke0');
+('mmm','$6$dd537d8a48d14e5a$NyGpe5348Msu4QJ9oIdI2DwrVmyVKhQt3nE0lsBlYF9/Hgu1MrGFuq/bQX97rr1UL0DD9zApwI.Ffa7XLgqke0'),
+('user1','$6$dd537d8a48d14e5a$NyGpe5348Msu4QJ9oIdI2DwrVmyVKhQt3nE0lsBlYF9/Hgu1MrGFuq/bQX97rr1UL0DD9zApwI.Ffa7XLgqke0'),
+('user2','$6$dd537d8a48d14e5a$NyGpe5348Msu4QJ9oIdI2DwrVmyVKhQt3nE0lsBlYF9/Hgu1MrGFuq/bQX97rr1UL0DD9zApwI.Ffa7XLgqke0');
+
+INSERT INTO sessions (session_id, user_id, expires_at) VALUES
+('62609b8b616aa4d8185850a009605039', 'admin', DATE_ADD(NOW(), INTERVAL 4 HOUR)),
+('	d2d928bfbb32faf5f8d54392d98ac057', 'mmm', DATE_ADD(NOW(), INTERVAL 4 HOUR));
+
 
 INSERT INTO products (name, seller, price, image_url, description) VALUES
 ('USB', 'Vendor_A5', 0.05, 'images/products/USBmemory.png', 'hacking用usbメモリ'),
-('スマホ', 'CipherMaster', 5.00, 'images/products/smartphone.png', '飛ばし用スマホ'),
 ('薬', 'ShadowCorp', 3.50, 'images/products/drugtwo.png', '見てわかる'),
-('葉っぱ', 'GhostSec', 50.00, 'images/products/malifana.png', '吸うのにいい。');
+('葉っぱ', 'GhostSec', 50.00, 'images/products/malifana.png', '吸うのにいい。'),
+('パソコン', 'Vendor_A5', 100.00, 'https://placehold.jp/150x150.png', 'ハッキング用パソコン'),
+('拳銃', 'Vendor_A5', 500.00, 'https://placehold.jp/150x150.png', '本物の拳銃'),
+('爆弾キット', 'Vendor_A5', 1000.00, 'https://placehold.jp/150x150.png', '爆破用のキット'),
+('ヤキニク', 'GhostSec', 0.01, 'images/products/YAKINIKU(1).png', '食べると元気が出る'),
+('スマホ', 'CipherMaster', 5.00, 'images/products/smartphone.png', '飛ばし用スマホ'),
+('DDoS攻撃サービス(1h)', 'NetReapers', 20.00, 'https://placehold.jp/150x150.png', '標的のサーバーを1時間ダウンさせる。200Gbps保証。'),
+('盗難クレジットカード情報', 'DataDukes', 15.00, 'https://placehold.jp/150x150.png', '新鮮なCVV情報10件パック。残高保証付き。');

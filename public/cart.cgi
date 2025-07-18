@@ -7,6 +7,9 @@ import os
 import http.cookies
 from utility.database import create_transaction, verify_session
 import html  # HTMLエスケープ用ライブラリを追加
+from utility.mail import SentMail_NomalVer
+
+# 追加 メール機能           S.R
 
 cgitb.enable()
 
@@ -38,6 +41,7 @@ if action == 'confirm_purchase':
         item_ids = form.getlist('item_id')
         item_names = form.getlist('item_name')
         item_prices = form.getlist('item_price')
+        user_email = form.getfirst('email', '').strip()
 
         cart_items = []
         final_total = 0.0
@@ -55,41 +59,50 @@ if action == 'confirm_purchase':
         # 購入履歴をデータベースに保存
         transaction_id = create_transaction(user_id, cart_items)
 
+        # 購入アイテムと合計をメッセージにまとめる
+        thanks_message = "ご購入ありがとうございます！\n"
+        for name, price in zip(item_names, item_prices):
+            thanks_message += f"- {name}: {price} BTC\n"
+        thanks_message += f"\n合計金額: {final_total:.2f} BTC"
+
+        # 購入完了メールの送信
+        SentMail_NomalVer(user_email, thanks_message)
+
         print("Content-Type: text/html; charset=utf-8")
         print("Status: 200 OK")  # 正しいステータスコードを追加
         print()
         print(f"""<!DOCTYPE html>
-        <html lang="ja">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Terminal X - Transaction Result</title>
-            <style>
-                @import url('https://fonts.googleapis.com/css2?family=VT323&family=Inconsolata&display=swap');
-                :root {{--background-color: #0a0a0a;--text-color: #00ff41;--border-color: #00ff41;--window-bg: #111111;--title-bar-bg: #00ff41;--title-bar-text: #0a0a0a;--disabled-opacity: 0.5;}}
-                body {{background-color: var(--background-color);color: var(--text-color);font-family: 'Inconsolata', monospace;overflow: hidden;margin: 0;padding: 0;cursor: default;display: flex;flex-direction: column;align-items: center;justify-content: center;min-height: 100vh;}}
-                body::before {{content: '';position: fixed;top: 0;left: 0;width: 100vw;height: 100vh;background-image: linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px);background-size: 20px 20px;z-index: -1;}}
-                .window-container {{border: 2px solid var(--border-color);background-color: var(--window-bg);box-shadow: 5px 5px 0px rgba(0, 255, 65, 0.3);max-width: 500px;width: 90%;display: flex;flex-direction: column;flex-grow: 0;text-align: center;}}
-                .title-bar {{background-color: var(--title-bar-bg);color: var(--title-bar-text);padding: 8px 12px;font-weight: bold;display: flex;justify-content: center;align-items: center;user-select: none;}}
-                .window-content {{padding: 15px;flex-grow: 1;}}
-                .btn {{background-color: transparent; border: 2px solid var(--border-color); color: var(--text-color); padding: 10px 15px; cursor: pointer; font-family: inherit; text-transform: uppercase; margin-right: 10px; margin-top: 10px; }}
-                .btn:hover:not(:disabled) {{ background-color: var(--border-color); color: var(--title-bar-text); }}
-            </style>
-            <script>
-                sessionStorage.removeItem('shopping_cart_data');
-            </script>
-        </head>
-        <body>
-            <div class="window-container">
-                <div class="title-bar"><span>[TRANSACTION_COMPLETE]</span></div>
-                <div class="window-content">
-                    <p>Transaction complete. Total: {final_total:.2f} BTC.</p>
-                    <p>Your assets will be delivered shortly.</p>
-                    <p><a href="home.cgi" class="btn">[HOME]</a></p>
-                </div>
-            </div>
-        </body>
-        </html>""")
+<html lang=\"ja\">
+<head>
+    <meta charset=\"UTF-8\">
+    <title>Transaction Complete</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&family=Inconsolata&display=swap');
+        :root {{--background-color: #0a0a0a;--text-color: #00ff41;--border-color: #00ff41;--window-bg: #111111;--title-bar-bg: #00ff41;--title-bar-text: #0a0a0a;--disabled-opacity: 0.5;}}
+        body {{background-color: var(--background-color);color: var(--text-color);font-family: 'Inconsolata', monospace;overflow: hidden;margin: 0;padding: 0;cursor: default;display: flex;flex-direction: column;align-items: center;justify-content: center;min-height: 100vh;}}
+        body::before {{content: '';position: fixed;top: 0;left: 0;width: 100vw;height: 100vh;background-image: linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px);background-size: 20px 20px;z-index: -1;}}
+        .window-container {{border: 2px solid var(--border-color);background-color: var(--window-bg);box-shadow: 5px 5px 0px rgba(0, 255, 65, 0.3);max-width: 500px;width: 90%;display: flex;flex-direction: column;flex-grow: 0;text-align: center;}}
+        .title-bar {{background-color: var(--title-bar-bg);color: var(--title-bar-text);padding: 8px 12px;font-weight: bold;display: flex;justify-content: center;align-items: center;user-select: none;}}
+        .window-content {{padding: 15px;flex-grow: 1;}}
+        .btn {{background-color: transparent; border: 2px solid var(--border-color); color: var(--text-color); padding: 10px 15px; cursor: pointer; font-family: inherit; text-transform: uppercase; margin-right: 10px; margin-top: 10px; }}
+        .btn:hover:not(:disabled) {{ background-color: var(--border-color); color: var(--title-bar-text); }}
+    </style>
+    <script>
+        sessionStorage.removeItem('shopping_cart_data');
+    </script>
+</head>
+<body>
+    <div class="window-container">
+        <div class="title-bar"><span>[TRANSACTION_COMPLETE]</span></div>
+        <div class="window-content">
+            <h2>取引完了</h2>
+            <pre>{html.escape(thanks_message)}</pre>
+            <p>登録されたメール: {html.escape(user_email)}</p>
+            <a href="home.cgi" class="btn">[HOME]</a>
+        </div>
+    </div>
+</body>
+</html>""")
     except Exception as e:
         print("Content-Type: text/html; charset=utf-8")
         print("Status: 500 Internal Server Error")
@@ -243,7 +256,7 @@ else:
             <a href="home.cgi" class="btn">[HOME]</a>
         </div>
         <div class="window-content">
-            <form method="POST" action="cart.cgi">
+            <form id="purchase-form" method="POST" action="cart.cgi">
                 <input type="hidden" name="action" value="confirm_purchase">
                 <table class="styled-table">
                     <thead> <tr> <th>Item Name</th> <th>Price (BTC)</th> </tr> </thead>
@@ -252,7 +265,11 @@ else:
                     </tbody>
                     <tfoot> <tr class="total-row"> <td>TOTAL:</td> <td id="checkout-total">0.00</td> </tr> </tfoot>
                 </table>
-                <button type="submit" class="btn" disabled>[CONFIRM & TRANSMIT]</button>
+                <div style="margin-top: 10px;">
+                    <label for="email">Email:</label>
+                    <input type="email" name="email" id="email" class="price-input" placeholder="example@example.com">
+                </div>
+                <button type="button" class="btn" id="confirm-btn" disabled>[CONFIRM & TRANSMIT]</button>
             </form>
         </div>
     </div>
@@ -271,7 +288,7 @@ else:
             const cartData = JSON.parse(sessionStorage.getItem('shopping_cart_data')) || [];
             const checkoutItems = document.getElementById('checkout-items');
             const checkoutTotal = document.getElementById('checkout-total');
-            const confirmButton = document.querySelector('button[type="submit"]');
+            const confirmButton = document.getElementById('confirm-btn');
             
             if (cartData.length === 0) {
                 checkoutItems.innerHTML = '<tr><td colspan="2">Shopping cart is empty.</td></tr>';
@@ -298,6 +315,15 @@ else:
                 confirmButton.disabled = false;
             }
         };
+
+        document.getElementById('confirm-btn').addEventListener('click', function() {
+            const email = document.getElementById('email').value.trim();
+            if (!email) {
+                alert("メールアドレスを入力してください！");
+                return;
+            }
+            document.getElementById('purchase-form').submit();
+        });
     </script>
 </body>
 </html>""")
